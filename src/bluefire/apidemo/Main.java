@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -20,12 +21,13 @@ import android.widget.Toast;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.pm.PackageInfo;
 
 import com.bluefire.api.Adapter;
+import com.bluefire.api.Adapter.MessageIds;
 import com.bluefire.api.Truck;
 import com.bluefire.api.Const;
 import com.bluefire.api.Helper;
+import com.bluefire.api.Adapter.AdapterErrors;
 import com.bluefire.api.Adapter.ConnectionStates;
 import com.bluefire.api.Adapter.IgnoreDatabuses;
 
@@ -84,12 +86,7 @@ public class Main extends Activity
 		
 		blueFire = new Adapter(this, adapterHandler);
 		
-		try	
-		{
-			PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-			this.setTitle("API Demo " + packageInfo.versionCode + "." + blueFire.Version);
-		} 
-		catch (Exception e) {} 
+		this.setTitle("API Demo v-" + blueFire.Version);
 
         // Set to use an insecure connection.
         // Note, there are other Android devices that require this other than just ICS (4.0.x).
@@ -268,14 +265,16 @@ public class Main extends Activity
         buttonConnect.setEnabled(false);
         buttonUpdate.setEnabled(false);
 
-		Toast.makeText(this, blueFire.ReconnectReason, Toast.LENGTH_LONG).show();
+        LogNotifications("App reconnecting to the Adapter. Reason is " + blueFire.ReconnectReason + ".");
+        
+		Toast.makeText(this, "Lost connection to the Adapter.", Toast.LENGTH_LONG).show();
          
     	Toast.makeText(this, "Attempting to reconnect.", Toast.LENGTH_LONG).show();
     }
  
     private void AdapterReconnected()
     {
-        AdapterConnected();
+        // Note, AdapterConnected will be called when State changes to Connected.
  
         Toast.makeText(this, "Adapter reconnected.", Toast.LENGTH_LONG).show();
     }
@@ -285,12 +284,6 @@ public class Main extends Activity
         AdapterNotConnected();
         
         Toast.makeText(this, "Adapter did not reconnect.", Toast.LENGTH_LONG).show();
-    }
-
-    private void RebootAdapter()
-    {
-    	 blueFire.RebootAdapter();
-         Toast.makeText(this, "Adapter is being rebooted.", Toast.LENGTH_LONG).show();
     }
 
 	// Next Group click
@@ -359,7 +352,7 @@ public class Main extends Activity
 		
 		blueFire.SetLedBrightness(ledBrightness);
 	}
-
+	
     // Data Changed Handler from the BlueFire Adapter
 	private final Handler adapterHandler = new Handler() 
 	{
@@ -378,10 +371,17 @@ public class Main extends Activity
 						
 					case Connecting:
 						// Status only
+						if (blueFire.IsReconnecting)
+							if (!isConnecting)
+								AdapterReconnecting();
 						break;
 						
 					case Connected:
-						if (!isConnected && blueFire.IsConnected)
+						// Status only
+						break;
+						
+					case AdapterConnected:
+						if (!isConnected)
 		                	AdapterConnected();
 						break;
 						
@@ -400,13 +400,13 @@ public class Main extends Activity
 						break;
 						
 					case Reconnected:
-						AdapterReconnected();
-						blueFire.ConnectionState = ConnectionStates.Connected;
+						if (isConnecting)
+							AdapterReconnected();
 						break;
 						
 					case NotReconnected:
-						AdapterNotReconnected();
-						blueFire.ConnectionState = ConnectionStates.NotConnected;
+						if (isConnecting)
+							AdapterNotReconnected();
 						break;
 						
 					case DataError:
@@ -420,6 +420,7 @@ public class Main extends Activity
 						{
 							blueFire.Disconnect();
 							AdapterNotConnected();
+							ShowMessage("Adapter Connection", "Adapter Timed Out");
 						}
 						break;
 						
@@ -431,17 +432,42 @@ public class Main extends Activity
 							ShowSystemError();
 						}
 						break;
+						
+					case DataChanged:
+						ShowData();
 				}
 				
-				// Show any changed data
-				if (isConnected)
-					ShowData();
-				else
+				// Check reset button enable
+				if (!isConnected)
 		          	buttonReset.setEnabled(false); // because it's enabled in ShowData
 			} 
 			catch (Exception e) {} 
 		}
 	};
+	
+    // Start retrieving data after connecting to the adapter
+    private void getData()
+    {        
+		// Note, version has already been retrieved
+		
+       	blueFire.GetSleepMode();
+      	blueFire.GetLedBrightness();
+       	blueFire.GetAdapterName();
+       	blueFire.GetPassword();
+       	blueFire.GetMessages();
+     	
+      	blueFire.GetVIN();
+      	blueFire.GetOdometer();
+      	blueFire.GetFuelData();
+      	blueFire.GetEngineTemps();
+      	blueFire.GetEngineHours();
+      	blueFire.GetEngineData();
+      	blueFire.GetEngineFluidData();
+      	blueFire.GetCruiseControlData();
+      	blueFire.GetBatteryVoltage();
+      	blueFire.GetBrakeData();
+      	blueFire.GetFaults();
+    }
 
 	private void ShowStatus()
 	{
@@ -453,14 +479,17 @@ public class Main extends Activity
 		}
 		
         // Show any error message from the adapter
-		if (blueFire.ErrorNo > 0)
-		{
-			String message = Helper.FormatErrorMessage(blueFire.ErrorNo, blueFire.ErrorMessage);
-	        if (!message.equals(""))
-				ShowMessage("Adapter Error", message);
-        	blueFire.ClearErrorMessage();
-        }
+    	if (blueFire.NotificationMessage != "")
+    	{
+    		LogNotifications(blueFire.NotificationMessage);
+    		blueFire.NotificationMessage = "";
+    	}
 	}
+	
+    private void LogNotifications(String Notification)
+    {
+ 		Log.d("BlueFire", Notification);
+     }
 	
 	private void ShowData()
 	{       
@@ -651,38 +680,11 @@ public class Main extends Activity
 		
         return String.valueOf(NumberFormat.getNumberInstance(Locale.US).format(Double.valueOf(new DecimalFormat(formatString).format(data))));
 	}
-	
-    // Start retrieving data after connecting to the adapter
-    private void getData()
-    {        
-		// Note, version has already been retrieved
-		
-       	blueFire.GetSleepMode();
-      	blueFire.GetLedBrightness();
-       	blueFire.GetErrorMessage();
-      	
-      	blueFire.GetVIN();
-      	blueFire.GetOdometer();
-      	blueFire.GetFuelData();
-      	blueFire.GetEngineTemps();
-      	blueFire.GetEngineHours();
-      	blueFire.GetEngineData();
-      	blueFire.GetEngineFluidData();
-      	blueFire.GetCruiseControlData();
-      	blueFire.GetBatteryVoltage();
-      	blueFire.GetBrakeData();
-      	blueFire.GetFaults();
-    }
 
     private void ShowSystemError()
     {
-		String Message = "System Error occurred at " + blueFire.ExceptionLocation + ".";
-		if (blueFire.ExceptionMessage != "")
-			Message += Message + " " + blueFire.ExceptionMessage + ".";
-		if (blueFire.Exception != null)
-			Message += Const.CrLf + Const.CrLf + Helper.GetErrorMessage(this, blueFire.Exception);
-		
-		ShowMessage("System Error", Message);
+		ShowMessage("System Error", blueFire.NotificationMessage);
+		blueFire.NotificationMessage = "";
     }
     
 	private void ShowMessage(String title, String message)
@@ -706,7 +708,8 @@ public class Main extends Activity
     {
 		super.onDestroy();
 		
-		blueFire.Disconnect();
+		blueFire.Dispose();
     }
 
 }
+
