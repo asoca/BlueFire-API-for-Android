@@ -12,6 +12,6 @@ Version 3:
 	
 Version 4:
 	Added Adapter Name and Password retrieval and update.
-	API will connect to any adapter that starts with the Adapter Name.
-	Reboots adapter on receiving adapter errors.
-	Supports Adapter Firmware 2.13
+	Connects to any adapter that starts with the Adapter Name.
+	Reboots the adapter on receiving adapter errors (firmware version 2.12).
+	Supports Adapter Firmware 2.13.
