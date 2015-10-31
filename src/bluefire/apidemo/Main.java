@@ -52,6 +52,7 @@ public class Main extends Activity
 	private TextView textStatus;    
 	private TextView textFaultCode;
 	private EditText textLedBrightness;
+	private EditText textAdapterName;
 	private CheckBox checkJ1939;
 	private CheckBox checkJ1708;
 	private Button buttonConnect;
@@ -62,6 +63,7 @@ public class Main extends Activity
     private boolean isConnecting;
     private boolean isConnected;
     private int ledBrightness; 
+    private String adapterName = "";
 
 	private int faultIndex;
 	
@@ -135,6 +137,7 @@ public class Main extends Activity
         textStatus = (TextView) findViewById(R.id.textStatus);
         textFaultCode = (TextView) findViewById(R.id.textFaultCode);
         textLedBrightness = (EditText) findViewById(R.id.textLedBrightness);
+        textAdapterName = (EditText) findViewById(R.id.textAdapterName);
         
         checkJ1939 = (CheckBox) findViewById(R.id.checkJ1939);
         checkJ1708 = (CheckBox) findViewById(R.id.checkJ1708);
@@ -172,6 +175,7 @@ public class Main extends Activity
 		textVIN.setText("NA");
 		textFaultCode.setText("NA");
 		textLedBrightness.setText("0");
+		textAdapterName.setText("");
 		textHeartbeat.setText("0");
 
 		faultIndex = -1;
@@ -202,13 +206,7 @@ public class Main extends Activity
             connectTimer.schedule(new ConnectAdapter(), 1, Long.MAX_VALUE);
        }
         else
-        {
-            buttonConnect.setEnabled(false);
-            buttonReset.setEnabled(false);
-            buttonUpdate.setEnabled(false);
-            
-            blueFire.Disconnect(true);
-       }
+        	DisconnectAdapter();
 	}
 	
 	private class ConnectAdapter extends TimerTask
@@ -223,6 +221,15 @@ public class Main extends Activity
 			connectTimer.cancel();
         }
 	};
+
+	private void DisconnectAdapter()
+	{
+        buttonConnect.setEnabled(false);
+        buttonReset.setEnabled(false);
+        buttonUpdate.setEnabled(false);
+        
+        blueFire.Disconnect(true);
+	}
 	
 	private void AdapterConnected()
 	{
@@ -337,6 +344,7 @@ public class Main extends Activity
 	// Update button
 	public void onUpdateClick(View view) 
 	{
+		// Update LED Brightness
 		int ledBrightness = -1;
 		try
 		{
@@ -349,8 +357,27 @@ public class Main extends Activity
             Toast.makeText(this, "Led Brightness must be between 1 and 100", Toast.LENGTH_LONG).show();
             return;
 		}
+		if (ledBrightness != blueFire.LedBrightness)
+		{
+			blueFire.SetLedBrightness(ledBrightness);
+	        Toast.makeText(this, "LED Brightness updated.", Toast.LENGTH_SHORT).show();
+		}
 		
-		blueFire.SetLedBrightness(ledBrightness);
+		// Update Adapter Name
+		String adapterName = textAdapterName.getText().toString().trim();
+		if (adapterName.length() > 20)
+		{
+            Toast.makeText(this, "Adapter Name must be less than 20 characters.", Toast.LENGTH_LONG).show();
+            return;
+		}
+		if (adapterName.equals(""))
+			adapterName = blueFire.DefaultName;
+		
+		if (!adapterName.equals(blueFire.Name))
+		{
+			blueFire.SetName(adapterName);	
+			Toast.makeText(this, "Adapter Name updated.", Toast.LENGTH_SHORT).show();
+		}
 	}
 	
     // Data Changed Handler from the BlueFire Adapter
@@ -448,8 +475,15 @@ public class Main extends Activity
     // Start retrieving data after connecting to the adapter
     private void getData()
     {        
-		// Note, version has already been retrieved
-		
+		// Note, version has already been retrieved.
+		// Check for an incompatible version.
+    	if (blueFire.IsVersionIncompatible)
+    	{
+            Toast.makeText(this, "The BlueFire Adapter is not compatible with this API.", Toast.LENGTH_LONG).show();
+            DisconnectAdapter();
+            return;
+    	}
+    	
        	blueFire.GetSleepMode();
       	blueFire.GetLedBrightness();
        	blueFire.GetAdapterName();
@@ -524,6 +558,14 @@ public class Main extends Activity
         	ledBrightness = Integer.parseInt(textLedBrightness.getText().toString());
         	textLedBrightness.setText(String.valueOf(blueFire.LedBrightness));
          }
+         
+         // Only change an input field if data has changed
+          if (!adapterName.equals(blueFire.Name))
+          {
+        	adapterName = textAdapterName.getText().toString().trim();
+        	textAdapterName.setText(String.valueOf(blueFire.Name));
+          }
+         
          // Show heartbeat
          textHeartbeat.setText(String.valueOf(blueFire.HeartbeatCount));
          
@@ -699,8 +741,16 @@ public class Main extends Activity
 	public void onBackPressed()
     {
 		super.onBackPressed();
-		
-		blueFire.Disconnect();
+		try 
+		{
+			blueFire.RebootAdapter();
+			
+			// Allow reboot command to be sent before disconnecting
+			Thread.sleep(200); 
+			
+			blueFire.Disconnect();
+		}
+		catch (Exception e) {} 
     }
 
 	@Override
