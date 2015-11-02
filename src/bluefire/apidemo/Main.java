@@ -21,6 +21,7 @@ import android.widget.Toast;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.SharedPreferences;
 
 import com.bluefire.api.Adapter;
 import com.bluefire.api.Adapter.MessageIds;
@@ -78,6 +79,68 @@ public class Main extends Activity
 
     // BlueFire adapter
     private Adapter blueFire;
+
+    private Settings AppSettings;
+    
+    private class Settings
+    {
+    	private static final String preferenceName = "BlueFire Demo";
+    	
+    	public String adapterName = blueFire.DefaultName;
+    	
+        public int sleepMode;
+    	public int ledBrightness = 100;
+    	
+        public boolean ignoreJ1939 = false;
+        public boolean ignoreJ1708 = false;
+        
+        public String lastConnectedId = "";
+        public boolean connectToLastAdapter = false;
+        
+        public int discoveryTimeOut = 5 * Const.OneSecond;
+        public int maxConnectRetrys;
+       
+        public void getSettings()
+        {
+        	SharedPreferences settings = getSharedPreferences(preferenceName, 0);
+
+        	adapterName = settings.getString("adapterName", blueFire.DefaultName);
+       	
+        	sleepMode = settings.getInt("sleepMode", 0);
+        	ledBrightness = settings.getInt("ledBrightness", 100);
+
+        	ignoreJ1939 = settings.getBoolean("ignoreJ1939", false);
+        	ignoreJ1708 = settings.getBoolean("ignoreJ1708", true); // set to true to improve performance
+
+        	lastConnectedId = settings.getString("lastConnectedId", "");
+        	connectToLastAdapter = settings.getBoolean("connectToLastAdapter", false);
+
+        	discoveryTimeOut = settings.getInt("discoveryTimeOut", 5 * Const.OneSecond);
+        	maxConnectRetrys = settings.getInt("maxConnectRetrys", 0);
+        }
+        
+        public void saveSettings()
+        {
+        	SharedPreferences preferences = getSharedPreferences(preferenceName, MODE_PRIVATE);
+        	SharedPreferences.Editor edit= preferences.edit();
+        	
+        	edit.putString("adapterName", adapterName);
+
+          	edit.putInt("sleepMode", sleepMode);
+        	edit.putInt("ledBrightness", ledBrightness);
+        	
+        	edit.putBoolean("ignoreJ1939", ignoreJ1939);
+        	edit.putBoolean("ignoreJ1708", ignoreJ1708);
+        	
+        	edit.putString("lastConnectedId", lastConnectedId);
+        	edit.putBoolean("connectToLastAdapter", connectToLastAdapter);
+
+        	edit.putInt("discoveryTimeOut", discoveryTimeOut);
+        	edit.putInt("maxConnectRetrys", maxConnectRetrys);
+
+        	edit.commit();    
+        }
+    }
     
 	@Override
 	protected void onCreate(Bundle savedInstanceState) 
@@ -97,24 +160,43 @@ public class Main extends Activity
         else
             blueFire.Comm.UseInsecureConnection = false;   	
 
+        // Get app settings
+        AppSettings = new Settings();
+
+        // Initialize adapter properties
+        InitializeAdapter();
+        
+        // Initialize the app startup form
+        initializeForm();
+	}
+	
+	private void InitializeAdapter()
+	{
+        AppSettings.getSettings();
+
+        // Set the adapter name
+		blueFire.AdapterName = AppSettings.adapterName;
+        
         // Set the Bluetooth discovery timeout.
         // Note, depending on the number of Bluetooth devices present on the mobile device,
         // discovery could take a long time.
         // Note, if this is set to a high value, the app needs to provide the user with the
         // capability of canceling the discovery.
-        blueFire.Comm.DiscoveryTimeOut = 5 * Const.OneSecond; // 5 seconds is the default
+        blueFire.Comm.DiscoveryTimeOut = AppSettings.discoveryTimeOut;
         
         // Set number of Bluetooth connection attempts.
         // Note, if the mobile device does not connect, try setting this to a value that 
         // allows for a consistent connection. If you're using multiple adapters and have 
         // connection problems, un-pair all devices before connecting.
-        blueFire.Comm.MaxConnectRetrys = 0; // 0 is the default
+        blueFire.Comm.MaxConnectRetrys = AppSettings.maxConnectRetrys;
+        
+        // Get the Bluetooth last connection id and the connect to last adapter setting
+        blueFire.Comm.LastConnectedId = AppSettings.lastConnectedId;
+        blueFire.Comm.ConnectToLastAdapter = AppSettings.connectToLastAdapter;
 		
-		// Set to ignore data bus to improve performance
-		blueFire.IgnoreJ1939 = false;
-		blueFire.IgnoreJ1708 = true;
-
-        initializeForm();
+		// GEt to ignore data bus settings
+		blueFire.IgnoreJ1939 = AppSettings.ignoreJ1939;
+		blueFire.IgnoreJ1708 = AppSettings.ignoreJ1708;
 	}
 
 	private void initializeForm()
@@ -214,8 +296,8 @@ public class Main extends Activity
         @Override
         public void run()
         {
-        	blueFire.IgnoreJ1939 = !checkJ1939.isChecked();
-        	blueFire.IgnoreJ1708 = !checkJ1708.isChecked();
+            // Initialize adapter properties (in case they were changed)
+        	InitializeAdapter();
         	
 			blueFire.Connect(); // this is a blocking call
 			connectTimer.cancel();
@@ -224,11 +306,19 @@ public class Main extends Activity
 
 	private void DisconnectAdapter()
 	{
-        buttonConnect.setEnabled(false);
-        buttonReset.setEnabled(false);
-        buttonUpdate.setEnabled(false);
-        
-        blueFire.Disconnect(true);
+		try
+		{
+	        buttonConnect.setEnabled(false);
+	        buttonReset.setEnabled(false);
+	        buttonUpdate.setEnabled(false);
+	        
+	        // Reset the adapter
+	        blueFire.RebootAdapter();
+	        Thread.sleep(200); // wait for reboot command to be sent 
+	        
+	        blueFire.Disconnect(true);
+		}
+		catch(Exception e) {}
 	}
 	
 	private void AdapterConnected()
@@ -242,6 +332,10 @@ public class Main extends Activity
         buttonUpdate.setEnabled(true);
     	
     	buttonConnect.requestFocus();
+    	
+		// Save settings
+		AppSettings.lastConnectedId = blueFire.Comm.LastConnectedId;
+		AppSettings.saveSettings();
         
 		getData();
 	}
@@ -326,6 +420,11 @@ public class Main extends Activity
 		
 		// J1939 is checked so uncheck J1708
 		checkJ1708.setChecked(false);
+		
+		// Save settings
+		AppSettings.ignoreJ1939 = !checkJ1939.isChecked();
+		AppSettings.ignoreJ1708 = !checkJ1708.isChecked();
+		AppSettings.saveSettings();
 	}
 
 	public void onJ1708Click(View view)
@@ -339,6 +438,11 @@ public class Main extends Activity
 		
 		// J1708 is checked so uncheck J1939
 		checkJ1939.setChecked(false);
+		
+		// Save settings
+		AppSettings.ignoreJ1939 = !checkJ1939.isChecked();
+		AppSettings.ignoreJ1708 = !checkJ1708.isChecked();
+		AppSettings.saveSettings();
 	}
 	
 	// Update button
@@ -373,11 +477,16 @@ public class Main extends Activity
 		if (adapterName.equals(""))
 			adapterName = blueFire.DefaultName;
 		
-		if (!adapterName.equals(blueFire.Name))
+		if (!adapterName.equals(blueFire.AdapterName))
 		{
-			blueFire.SetName(adapterName);	
+			blueFire.SetAdapterName(adapterName);	
 			Toast.makeText(this, "Adapter Name updated.", Toast.LENGTH_SHORT).show();
 		}
+		
+		// Save settings
+		AppSettings.ledBrightness = ledBrightness;
+		AppSettings.adapterName = adapterName;
+		AppSettings.saveSettings();
 	}
 	
     // Data Changed Handler from the BlueFire Adapter
@@ -560,10 +669,10 @@ public class Main extends Activity
          }
          
          // Only change an input field if data has changed
-          if (!adapterName.equals(blueFire.Name))
+          if (!adapterName.equals(blueFire.AdapterName))
           {
         	adapterName = textAdapterName.getText().toString().trim();
-        	textAdapterName.setText(String.valueOf(blueFire.Name));
+        	textAdapterName.setText(String.valueOf(blueFire.AdapterName));
           }
          
          // Show heartbeat

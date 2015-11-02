@@ -18,8 +18,9 @@ Version 4:
 	
 Version 5:
 	Added Adapter Name update to Main page.
-	Added Incompatible version check.
-		Adapter Firmware 2.7 and below.
-		Adapter Firmware 3.0 and above.
+	Added App Settings class for BlueFire settings.
+	Added rebooting the adapter when disconnecting.
+	Added LastConnectedId and ConnectToLastAdapter Bluetooth settings.
+	Added Incompatible version check (Adapter Firmware 2.7- and Adapter Firmware 3.0+)
 	
 	
