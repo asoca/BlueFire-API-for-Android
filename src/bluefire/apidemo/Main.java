@@ -24,13 +24,10 @@ import android.app.AlertDialog;
 import android.content.SharedPreferences;
 
 import com.bluefire.api.Adapter;
-import com.bluefire.api.Adapter.MessageIds;
 import com.bluefire.api.Truck;
 import com.bluefire.api.Const;
 import com.bluefire.api.Helper;
-import com.bluefire.api.Adapter.AdapterErrors;
 import com.bluefire.api.Adapter.ConnectionStates;
-import com.bluefire.api.Adapter.IgnoreDatabuses;
 
 public class Main extends Activity 
 {
@@ -41,6 +38,7 @@ public class Main extends Activity
 	private TextView textView4;
 	private TextView textView5;
 	private TextView textView6;
+	private TextView textView7;
 	
 	private TextView dataView1;
 	private TextView dataView2;
@@ -48,8 +46,8 @@ public class Main extends Activity
 	private TextView dataView4;
 	private TextView dataView5;
 	private TextView dataView6;
+	private TextView dataView7;
 	
-	private TextView textVIN;
 	private TextView textStatus;    
 	private TextView textFaultCode;
 	private EditText textLedBrightness;
@@ -63,12 +61,13 @@ public class Main extends Activity
     
     private boolean isConnecting;
     private boolean isConnected;
-    private int ledBrightness; 
+    
     private String adapterName = "";
+    private int ledBrightness;
+    private boolean ignoreJ1939;
+    private boolean ignoreJ1708;
 
 	private int faultIndex;
-	
-	private boolean vinRetrieved;
 	
 	private int groupNo;
 	private static final int maxGroupNo = 5;
@@ -80,7 +79,7 @@ public class Main extends Activity
     // BlueFire adapter
     private Adapter blueFire;
 
-    private Settings AppSettings;
+    private Settings appSettings;
     
     private class Settings
     {
@@ -161,42 +160,42 @@ public class Main extends Activity
             blueFire.Comm.UseInsecureConnection = false;   	
 
         // Get app settings
-        AppSettings = new Settings();
+        appSettings = new Settings();
 
         // Initialize adapter properties
-        InitializeAdapter();
+        initializeAdapter();
         
         // Initialize the app startup form
         initializeForm();
 	}
 	
-	private void InitializeAdapter()
+	private void initializeAdapter()
 	{
-        AppSettings.getSettings();
+        appSettings.getSettings();
 
         // Set the adapter name
-		blueFire.AdapterName = AppSettings.adapterName;
+		blueFire.AdapterName = appSettings.adapterName;
         
         // Set the Bluetooth discovery timeout.
         // Note, depending on the number of Bluetooth devices present on the mobile device,
         // discovery could take a long time.
         // Note, if this is set to a high value, the app needs to provide the user with the
         // capability of canceling the discovery.
-        blueFire.Comm.DiscoveryTimeOut = AppSettings.discoveryTimeOut;
+        blueFire.Comm.DiscoveryTimeOut = appSettings.discoveryTimeOut;
         
         // Set number of Bluetooth connection attempts.
         // Note, if the mobile device does not connect, try setting this to a value that 
         // allows for a consistent connection. If you're using multiple adapters and have 
         // connection problems, un-pair all devices before connecting.
-        blueFire.Comm.MaxConnectRetrys = AppSettings.maxConnectRetrys;
+        blueFire.Comm.MaxConnectRetrys = appSettings.maxConnectRetrys;
         
         // Get the Bluetooth last connection id and the connect to last adapter setting
-        blueFire.Comm.LastConnectedId = AppSettings.lastConnectedId;
-        blueFire.Comm.ConnectToLastAdapter = AppSettings.connectToLastAdapter;
+        blueFire.Comm.LastConnectedId = appSettings.lastConnectedId;
+        blueFire.Comm.ConnectToLastAdapter = appSettings.connectToLastAdapter;
 		
-		// GEt to ignore data bus settings
-		blueFire.IgnoreJ1939 = AppSettings.ignoreJ1939;
-		blueFire.IgnoreJ1708 = AppSettings.ignoreJ1708;
+		// Set to ignore data bus settings
+		blueFire.SetIgnoreJ1939(appSettings.ignoreJ1939);
+		blueFire.SetIgnoreJ1708(appSettings.ignoreJ1708);
 	}
 
 	private void initializeForm()
@@ -207,6 +206,7 @@ public class Main extends Activity
         textView4 = (TextView) findViewById(R.id.textView4);
         textView5 = (TextView) findViewById(R.id.textView5);
         textView6 = (TextView) findViewById(R.id.textView6);
+        textView7 = (TextView) findViewById(R.id.textView7);
         
         dataView1 = (TextView) findViewById(R.id.dataView1);
         dataView2 = (TextView) findViewById(R.id.dataView2);
@@ -214,8 +214,8 @@ public class Main extends Activity
         dataView4 = (TextView) findViewById(R.id.dataView4);
         dataView5 = (TextView) findViewById(R.id.dataView5);
         dataView6 = (TextView) findViewById(R.id.dataView6);
+        dataView7 = (TextView) findViewById(R.id.dataView7);
         
-        textVIN = (TextView) findViewById(R.id.textVIN);
         textStatus = (TextView) findViewById(R.id.textStatus);
         textFaultCode = (TextView) findViewById(R.id.textFaultCode);
         textLedBrightness = (EditText) findViewById(R.id.textLedBrightness);
@@ -229,9 +229,6 @@ public class Main extends Activity
         textHeartbeat = (TextView) findViewById(R.id.textHeartbeat);
         
         clearForm();
-       
-		checkJ1939.setChecked(true);
-		checkJ1708.setChecked(false);
        
         buttonConnect.setEnabled(true);
         buttonReset.setEnabled(false);
@@ -247,22 +244,33 @@ public class Main extends Activity
 	{
 		ShowTruckText();
 		
+		// Clear form
 		dataView1.setText("0");
 		dataView2.setText("0");
 		dataView3.setText("0");
 		dataView4.setText("0");
 		dataView5.setText("0");
 		dataView6.setText("0");
+		dataView7.setText("NA");
 		
-		textVIN.setText("NA");
 		textFaultCode.setText("NA");
 		textLedBrightness.setText("0");
 		textAdapterName.setText("");
 		textHeartbeat.setText("0");
-
+		checkJ1939.setChecked(false);
+		checkJ1708.setChecked(false);
+		
 		faultIndex = -1;
 		ledBrightness = -1;
-    	vinRetrieved = false;
+		
+		ignoreJ1939 = false;
+		ignoreJ1708 = false;
+    	
+    	// Show user settings
+        textAdapterName.setText(appSettings.adapterName);
+        textLedBrightness.setText(String.valueOf(appSettings.ledBrightness));
+		checkJ1939.setChecked(!appSettings.ignoreJ1939); // checkJ1939 is the opposite of ignoreJ1939
+		checkJ1708.setChecked(!appSettings.ignoreJ1708); // checkJ1708 is the opposite of ignoreJ1708
 	}
 
 	// Connect button
@@ -297,7 +305,7 @@ public class Main extends Activity
         public void run()
         {
             // Initialize adapter properties (in case they were changed)
-        	InitializeAdapter();
+        	initializeAdapter();
         	
 			blueFire.Connect(); // this is a blocking call
 			connectTimer.cancel();
@@ -334,8 +342,8 @@ public class Main extends Activity
     	buttonConnect.requestFocus();
     	
 		// Save settings
-		AppSettings.lastConnectedId = blueFire.Comm.LastConnectedId;
-		AppSettings.saveSettings();
+		appSettings.lastConnectedId = blueFire.Comm.LastConnectedId;
+		appSettings.saveSettings();
         
 		getData();
 	}
@@ -411,38 +419,28 @@ public class Main extends Activity
 
 	public void onJ1939Click(View view)
 	{
-		// Do not allow unchecking
-		if (!checkJ1939.isChecked())
-		{
-			checkJ1939.setChecked(true);
-			return;
-		}
-		
-		// J1939 is checked so uncheck J1708
-		checkJ1708.setChecked(false);
+		// Set to ignore J1939 (opposite of checkJ1939)
+		ignoreJ1939 = !checkJ1939.isChecked();
 		
 		// Save settings
-		AppSettings.ignoreJ1939 = !checkJ1939.isChecked();
-		AppSettings.ignoreJ1708 = !checkJ1708.isChecked();
-		AppSettings.saveSettings();
+		appSettings.ignoreJ1939 = ignoreJ1939;
+		appSettings.saveSettings();
+		
+		// Update BlueFire
+		blueFire.SetIgnoreJ1939(ignoreJ1939);
 	}
 
 	public void onJ1708Click(View view)
 	{
-		// Do not allow unchecking
-		if (!checkJ1708.isChecked())
-		{
-			checkJ1708.setChecked(true);
-			return;
-		}
-		
-		// J1708 is checked so uncheck J1939
-		checkJ1939.setChecked(false);
+		// Set to ignore J708 (opposite of checkJ1708)
+		ignoreJ1708 = !checkJ1708.isChecked();
 		
 		// Save settings
-		AppSettings.ignoreJ1939 = !checkJ1939.isChecked();
-		AppSettings.ignoreJ1708 = !checkJ1708.isChecked();
-		AppSettings.saveSettings();
+		appSettings.ignoreJ1708 = ignoreJ1708;
+		appSettings.saveSettings();
+		
+		// Update BlueFire
+		blueFire.SetIgnoreJ1708(ignoreJ1708);
 	}
 	
 	// Update button
@@ -484,9 +482,9 @@ public class Main extends Activity
 		}
 		
 		// Save settings
-		AppSettings.ledBrightness = ledBrightness;
-		AppSettings.adapterName = adapterName;
-		AppSettings.saveSettings();
+		appSettings.ledBrightness = ledBrightness;
+		appSettings.adapterName = adapterName;
+		appSettings.saveSettings();
 	}
 	
     // Data Changed Handler from the BlueFire Adapter
@@ -593,23 +591,29 @@ public class Main extends Activity
             return;
     	}
     	
-       	blueFire.GetSleepMode();
-      	blueFire.GetLedBrightness();
-       	blueFire.GetAdapterName();
-       	blueFire.GetPassword();
-       	blueFire.GetMessages();
+       	blueFire.GetAdapterName(); // BlueFire or User Name
+       	blueFire.GetPassword(); // User Password
+    	
+       	blueFire.GetSleepMode(); // Adapter Sleep Mode
+      	blueFire.GetLedBrightness(); // Adapter LED Brightness
+       	blueFire.GetMessages(); // Any Adapter Error Messages
      	
-      	blueFire.GetVIN();
-      	blueFire.GetOdometer();
-      	blueFire.GetFuelData();
-      	blueFire.GetEngineTemps();
-      	blueFire.GetEngineHours();
-      	blueFire.GetEngineData();
-      	blueFire.GetEngineFluidData();
-      	blueFire.GetCruiseControlData();
-      	blueFire.GetBatteryVoltage();
-      	blueFire.GetBrakeData();
-      	blueFire.GetFaults();
+      	blueFire.GetVehicleData(); // VIN, Make, Model, Serial no
+      	
+     	blueFire.GetEngineData1(); // RPM, Percent Torque, Driver Torque, Torque Mode
+     	blueFire.GetEngineData2(); // Percent Load, Accelerator Pedal Position
+     	blueFire.GetEngineData3(); // Vehicle Speed, Max Set Speed, Brake Switch, Clutch Switch, Park Brake Switch, Cruise Control Settings and Switches
+     	
+      	blueFire.GetTemps(); // Oil Temp, Coolant Temp, Intake Manifold Temperature
+      	blueFire.GetOdometer(); // Odometer (Engine Distance)
+      	blueFire.GetFuelData(); // Fuel Used, Idle Fuel Used, Fuel Rate, Instant Fuel Economy, Avg Fuel Economy, Throttle Position
+      	blueFire.GetBrakeData(); // Application Pressure, Primary Pressure, Secondary Pressure
+      	blueFire.GetPressures(); // Oil Pressure, Coolant Pressure, Intake Manifold(Boost) Pressure
+      	blueFire.GetEngineHours(); // Total Engine Hours, Total Idle Hours
+      	blueFire.GetCoolantLevel(); // Coolant Level
+      	blueFire.GetBatteryVoltage(); // Battery Voltage
+      	
+      	blueFire.GetFaults(); // Any Engine Faults
     }
 
 	private void ShowStatus()
@@ -639,7 +643,6 @@ public class Main extends Activity
         // Show truck data
         if (blueFire.IsTruckDataChanged)
         {
-        	//blueFire.IsTruckDataChanged = false;
         	ShowTruckData();
         }
        
@@ -675,13 +678,21 @@ public class Main extends Activity
         	textAdapterName.setText(String.valueOf(blueFire.AdapterName));
           }
          
+         // Only change an input field if data has changed
+          if (!ignoreJ1939 != blueFire.GetIgnoreJ1939())
+          {
+        	  ignoreJ1939 = blueFire.GetIgnoreJ1939();
+        	  checkJ1939.setChecked(!ignoreJ1939); // checkJ1939 is the opposite of ignoreJ1939
+          }
+          if (!ignoreJ1708 != blueFire.GetIgnoreJ1708())
+          {
+        	  ignoreJ1708 = blueFire.GetIgnoreJ1708();
+        	  checkJ1708.setChecked(!ignoreJ1708); // checkJ1708 is the opposite of ignoreJ1708
+          }
+         
          // Show heartbeat
          textHeartbeat.setText(String.valueOf(blueFire.HeartbeatCount));
-         
-         // Show data buses
-         checkJ1939.setChecked(blueFire.IgnoreDatabus != IgnoreDatabuses.J1939);
-         checkJ1708.setChecked(blueFire.IgnoreDatabus != IgnoreDatabuses.J1708);
-    }
+   }
 	
 	private void ShowTruckText()
 	{
@@ -694,6 +705,7 @@ public class Main extends Activity
             textView4.setText("HiRes Max");
             textView5.setText("Accel Pedal");
             textView6.setText("Throttle Pos");
+            textView7.setText("VIN");
          	break;
         	
         case 1:
@@ -703,6 +715,7 @@ public class Main extends Activity
             textView4.setText("Idle Hours");
             textView5.setText("Brake Pres");
             textView6.setText("Brake Air");
+            textView7.setText("Make");
          	break;
         	
         case 2:
@@ -712,6 +725,7 @@ public class Main extends Activity
             textView4.setText("Idle Fuel Used");
             textView5.setText("Avg Fuel Econ");
             textView6.setText("Inst Fuel Econ");
+            textView7.setText("Model");
          	break;
         	
         case 3:
@@ -721,6 +735,7 @@ public class Main extends Activity
             textView4.setText("Torque Mode");
             textView5.setText("Intake Temp");
             textView6.setText("Intake Pres");
+            textView7.setText("Serial No");
          	break;
         	
         case 4:
@@ -730,6 +745,7 @@ public class Main extends Activity
             textView4.setText("Coolant Level");
             textView5.setText("Coolant Pres");
             textView6.setText("Battery Volts");
+            textView7.setText("Unit No");
          	break;
         	
         case 5:
@@ -739,20 +755,13 @@ public class Main extends Activity
             textView4.setText("Cruise Switch");
             textView5.setText("Cruise Speed");
             textView6.setText("Cruise State");
+            textView7.setText("VIN");
          	break;
         }
 	}
 
 	private void ShowTruckData()
 	{
-        // Check for retrieving the VIN
-        if (Truck.VIN != "" && !vinRetrieved)
-        {
-        	vinRetrieved = true;
-        	blueFire.RemoveVIN();
-            textVIN.setText(Truck.VIN);       
-        }
-
         switch (groupNo)
         {
         case 0:
@@ -762,6 +771,7 @@ public class Main extends Activity
             dataView4.setText(roundString(Truck.HiResMaxSpeed * Const.KphToMph,0));
             dataView5.setText(roundString(Truck.AccelPedal,2));
             dataView6.setText(roundString(Truck.ThrottlePos,2));
+            dataView7.setText(Truck.VIN);       
         	break;
         	
         case 1:
@@ -771,6 +781,7 @@ public class Main extends Activity
             dataView4.setText(roundString(Truck.IdleHours,2));
             dataView5.setText(roundString(Truck.BrakeAppPressure * Const.kPaToPSI,2));
             dataView6.setText(roundString(Truck.Brake1AirPressure * Const.kPaToPSI,2));
+            dataView7.setText(Truck.Make);       
          	break;
         	
         case 2:
@@ -780,6 +791,7 @@ public class Main extends Activity
             dataView4.setText(roundString(Truck.IdleFuelUsed * Const.LitersToGal,2));
             dataView5.setText(roundString(Truck.AvgFuelEcon * Const.KplToMpg,2));
             dataView6.setText(roundString(Truck.InstFuelEcon * Const.KplToMpg,2));
+            dataView7.setText(Truck.Model);       
          	break;
         	
         case 3:
@@ -789,6 +801,7 @@ public class Main extends Activity
             dataView4.setText(String.valueOf(Truck.TorqueMode));
             dataView5.setText(roundString(Helper.CelciusToFarenheit(Truck.IntakeTemp),2));
             dataView6.setText(roundString(Truck.IntakePressure * Const.kPaToPSI,2));
+            dataView7.setText(Truck.SerialNo);       
          	break;
         	
         case 4:
@@ -798,6 +811,7 @@ public class Main extends Activity
             dataView4.setText(roundString(Truck.CoolantLevel,2));
             dataView5.setText(roundString(Truck.CoolantPressure * Const.kPaToPSI,2));
             dataView6.setText(roundString(Truck.BatteryPotential,2));
+            dataView7.setText(Truck.UnitNo);       
          	break;
         	
         case 5:
@@ -807,6 +821,7 @@ public class Main extends Activity
             dataView4.setText(String.valueOf(Truck.CruiseSwitch));
             dataView5.setText(roundString(Truck.CruiseSetSpeed * Const.KphToMph,0));
             dataView6.setText(String.valueOf(Truck.CruiseState));
+            dataView7.setText(Truck.VIN);       
          	break;
         }
 	}
