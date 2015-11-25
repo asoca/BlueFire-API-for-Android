@@ -6,6 +6,8 @@ import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 
 import android.os.Bundle;
@@ -52,18 +54,26 @@ public class Main extends Activity
 	private TextView textFaultCode;
 	private EditText textLedBrightness;
 	private EditText textAdapterName;
+	private EditText textPGN;
+	private EditText textPGNData;
 	private CheckBox checkJ1939;
 	private CheckBox checkJ1708;
 	private Button buttonConnect;
 	private Button buttonReset;
 	private Button buttonUpdate;
+	private Button buttonSendMonitor;
 	private TextView textHeartbeat;
     
     private boolean isConnecting;
     private boolean isConnected;
     
-    private String adapterName = "";
     private int ledBrightness;
+    private String adapterName = "";
+	
+    private int pgn;
+    private boolean isSendingPGN;
+    private boolean isMonitoringPGN;
+
     private boolean ignoreJ1939;
     private boolean ignoreJ1708;
 
@@ -155,9 +165,9 @@ public class Main extends Activity
         // Set to use an insecure connection.
         // Note, there are other Android devices that require this other than just ICS (4.0.x).
         if (android.os.Build.VERSION.RELEASE.startsWith("4.0."))
-            blueFire.Comm.UseInsecureConnection = true;
+            blueFire.SetUseInsecureConnection(true);
         else
-            blueFire.Comm.UseInsecureConnection = false;   	
+            blueFire.SetUseInsecureConnection(false);   	
 
         // Get app settings
         appSettings = new Settings();
@@ -181,17 +191,17 @@ public class Main extends Activity
         // discovery could take a long time.
         // Note, if this is set to a high value, the app needs to provide the user with the
         // capability of canceling the discovery.
-        blueFire.Comm.DiscoveryTimeOut = appSettings.discoveryTimeOut;
+        blueFire.SetDiscoveryTimeOut(appSettings.discoveryTimeOut);
         
         // Set number of Bluetooth connection attempts.
         // Note, if the mobile device does not connect, try setting this to a value that 
         // allows for a consistent connection. If you're using multiple adapters and have 
         // connection problems, un-pair all devices before connecting.
-        blueFire.Comm.MaxConnectRetrys = appSettings.maxConnectRetrys;
+        blueFire.SetMaxConnectRetrys(appSettings.maxConnectRetrys);
         
         // Get the Bluetooth last connection id and the connect to last adapter setting
-        blueFire.Comm.LastConnectedId = appSettings.lastConnectedId;
-        blueFire.Comm.ConnectToLastAdapter = appSettings.connectToLastAdapter;
+        blueFire.SetLastConnectedId(appSettings.lastConnectedId);
+        blueFire.SetConnectToLastAdapter(appSettings.connectToLastAdapter);
 		
 		// Set to ignore data bus settings
 		blueFire.SetIgnoreJ1939(appSettings.ignoreJ1939);
@@ -220,12 +230,15 @@ public class Main extends Activity
         textFaultCode = (TextView) findViewById(R.id.textFaultCode);
         textLedBrightness = (EditText) findViewById(R.id.textLedBrightness);
         textAdapterName = (EditText) findViewById(R.id.textAdapterName);
+        textPGN = (EditText) findViewById(R.id.textPGN);
+        textPGNData = (EditText) findViewById(R.id.textPGNData);
         
         checkJ1939 = (CheckBox) findViewById(R.id.checkJ1939);
         checkJ1708 = (CheckBox) findViewById(R.id.checkJ1708);
         buttonConnect = (Button) findViewById(R.id.buttonConnect);
         buttonReset = (Button) findViewById(R.id.buttonReset);
         buttonUpdate = (Button) findViewById(R.id.buttonUpdate);
+        buttonSendMonitor = (Button) findViewById(R.id.buttonSendMonitor);
         textHeartbeat = (TextView) findViewById(R.id.textHeartbeat);
         
         clearForm();
@@ -320,10 +333,6 @@ public class Main extends Activity
 	        buttonReset.setEnabled(false);
 	        buttonUpdate.setEnabled(false);
 	        
-	        // Reset the adapter
-	        blueFire.RebootAdapter();
-	        Thread.sleep(200); // wait for reboot command to be sent 
-	        
 	        blueFire.Disconnect(true);
 		}
 		catch(Exception e) {}
@@ -342,7 +351,7 @@ public class Main extends Activity
     	buttonConnect.requestFocus();
     	
 		// Save settings
-		appSettings.lastConnectedId = blueFire.Comm.LastConnectedId;
+		appSettings.lastConnectedId = blueFire.GetLastConnectedId();
 		appSettings.saveSettings();
         
 		getData();
@@ -414,33 +423,7 @@ public class Main extends Activity
 	// Reset button
 	public void onResetClick(View view) 
 	{	
-		blueFire.J1939.ResetFaults();
-	}
-
-	public void onJ1939Click(View view)
-	{
-		// Set to ignore J1939 (opposite of checkJ1939)
-		ignoreJ1939 = !checkJ1939.isChecked();
-		
-		// Save settings
-		appSettings.ignoreJ1939 = ignoreJ1939;
-		appSettings.saveSettings();
-		
-		// Update BlueFire
-		blueFire.SetIgnoreJ1939(ignoreJ1939);
-	}
-
-	public void onJ1708Click(View view)
-	{
-		// Set to ignore J708 (opposite of checkJ1708)
-		ignoreJ1708 = !checkJ1708.isChecked();
-		
-		// Save settings
-		appSettings.ignoreJ1708 = ignoreJ1708;
-		appSettings.saveSettings();
-		
-		// Update BlueFire
-		blueFire.SetIgnoreJ1708(ignoreJ1708);
+		blueFire.ResetFaults();
 	}
 	
 	// Update button
@@ -485,6 +468,88 @@ public class Main extends Activity
 		appSettings.ledBrightness = ledBrightness;
 		appSettings.adapterName = adapterName;
 		appSettings.saveSettings();
+	}
+	
+	// Send/Monitor button
+	public void onSendMonitorClick(View view) 
+	{
+		isSendingPGN = false;
+		isMonitoringPGN = false;
+		
+		// Get PGN
+		pgn = -1;
+		try
+		{
+			pgn = Integer.parseInt("0"+textPGN.getText().toString().trim());
+		}
+		catch(Exception e){}
+		
+		if (pgn < 0)
+		{
+            Toast.makeText(this, "PGN must be numeric.", Toast.LENGTH_LONG).show();
+            return;
+		}
+		
+		// Ignore if no PGN
+		if (pgn == 0)
+			return;
+		
+		// Get PGN Data
+	    byte[] pgnBytes = new byte[8];
+	    
+		String pgnData = textPGNData.getText().toString().trim();
+		
+		if (pgnData.length() == 0) // Monitor a PGN
+		{
+			int source = 0; // engine
+			isMonitoringPGN = true;
+			blueFire.MonitorPGN(source, pgn);
+		}
+		else // Send a PGN
+		{
+			// Edit the PGN Data to be 16 hex characters (8 bytes)
+			if (pgnData.length() != 16) 
+			{
+	            Toast.makeText(this, "PGN Data must be 16 hex characters (8 bytes).", Toast.LENGTH_LONG).show();
+	            return;
+			}
+			
+			// Convert the PGN Data hex string to bytes
+		    try 
+		    {
+				pgnBytes = Hex.decodeHex(pgnData.toCharArray());
+			} catch (Exception e) {}
+		    
+			// Send the PGN
+			isSendingPGN = true;
+			blueFire.SendPGN(pgn,  pgnBytes);
+		}
+	}
+
+	public void onJ1939Click(View view)
+	{
+		// Set to ignore J1939 (opposite of checkJ1939)
+		ignoreJ1939 = !checkJ1939.isChecked();
+		
+		// Save settings
+		appSettings.ignoreJ1939 = ignoreJ1939;
+		appSettings.saveSettings();
+		
+		// Update BlueFire
+		blueFire.SetIgnoreJ1939(ignoreJ1939);
+	}
+
+	public void onJ1708Click(View view)
+	{
+		// Set to ignore J708 (opposite of checkJ1708)
+		ignoreJ1708 = !checkJ1708.isChecked();
+		
+		// Save settings
+		appSettings.ignoreJ1708 = ignoreJ1708;
+		appSettings.saveSettings();
+		
+		// Update BlueFire
+		blueFire.SetIgnoreJ1708(ignoreJ1708);
 	}
 	
     // Data Changed Handler from the BlueFire Adapter
@@ -689,6 +754,13 @@ public class Main extends Activity
         	  ignoreJ1708 = blueFire.GetIgnoreJ1708();
         	  checkJ1708.setChecked(!ignoreJ1708); // checkJ1708 is the opposite of ignoreJ1708
           }
+          
+          // Check for SendPGN response
+          if ((isSendingPGN || isMonitoringPGN) && blueFire.PGNData.PGN== pgn)
+          {
+        	  isSendingPGN = false; // only show sending data once
+        	  textPGNData.setText(new String(Hex.encodeHex(blueFire.PGNData.Data)).toUpperCase());       	  
+           }
          
          // Show heartbeat
          textHeartbeat.setText(String.valueOf(blueFire.HeartbeatCount));
@@ -818,7 +890,7 @@ public class Main extends Activity
             dataView1.setText(String.valueOf(Truck.BrakeSwitch));
             dataView2.setText(String.valueOf(Truck.ClutchSwitch));
             dataView3.setText(String.valueOf(Truck.ParkBrakeSwitch));
-            dataView4.setText(String.valueOf(Truck.CruiseSwitch));
+            dataView4.setText(String.valueOf(Truck.CruiseOnOff));
             dataView5.setText(roundString(Truck.CruiseSetSpeed * Const.KphToMph,0));
             dataView6.setText(String.valueOf(Truck.CruiseState));
             dataView7.setText(Truck.VIN);       
@@ -829,7 +901,7 @@ public class Main extends Activity
 	private void ShowFault()
 	{
 		// Show the fault at the specified index. Note, faultIndex is relative to 0.
-    	String FaultCode = String.valueOf(blueFire.J1939.GetFaultSPN(faultIndex)) + " - " + String.valueOf(blueFire.J1939.GetFaultFMI(faultIndex));
+    	String FaultCode = String.valueOf(Truck.GetFaultSPN(faultIndex)) + " - " + String.valueOf(Truck.GetFaultFMI(faultIndex));
     	textFaultCode.setText(FaultCode);
     	
     	// Set to show next fault
@@ -849,8 +921,7 @@ public class Main extends Activity
 
     private void ShowSystemError()
     {
-		ShowMessage("System Error", blueFire.NotificationMessage);
-		blueFire.NotificationMessage = "";
+		ShowMessage("System Error", "See System Log");
     }
     
 	private void ShowMessage(String title, String message)
@@ -867,11 +938,6 @@ public class Main extends Activity
 		super.onBackPressed();
 		try 
 		{
-			blueFire.RebootAdapter();
-			
-			// Allow reboot command to be sent before disconnecting
-			Thread.sleep(200); 
-			
 			blueFire.Disconnect();
 		}
 		catch (Exception e) {} 

@@ -33,4 +33,14 @@ Version 5:<ul>
 	</ul>
 </ul>
 	
+Version 6:<ul>
+	<li>Created an API document. Contact BlueFire Support for a copy.
+	<li>Removed exposure to the Comm, J1939, and J1587 classes, and, moved all properties and methods to the Adapter class.
+	<li>Added option to set the Interval on retrieving truck data (default is on change of data). This is useful when the data is coming in too fast (ie. RPM) and you want to slow it down.
+	<li>Added SendPGN method and PGNData property for sending non-API defined PGNs.
+	<li>Added sample code for SendPGN and MonitorPGN.
+	<li>Added commons-codec-1.10.jar to the project libs folder. This is only required for the API Demo app.
+	<li>Added a projects docs folder that contains the commons javadoc files. You must set the Javadoc Location project property to point to this folder.
+</ul>
+	
 	
