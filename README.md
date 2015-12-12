@@ -43,4 +43,8 @@ Version 6:<ul>
 	<li>Added a projects docs folder that contains the commons javadoc files. You must set the Javadoc Location project property to point to this folder.
 </ul>
 	
+Version 7:<ul>
+	<li>Compatible with Adapter Firmware 3.x.
+</ul>
+	
 	
