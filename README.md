@@ -44,6 +44,7 @@ Version 6:<ul>
 </ul>
 	
 Version 7:<ul>
+	<li>GetVehicleData is now threaded for performance.
 	<li>Compatible with Adapter Firmware 3.x.
 </ul>
 	

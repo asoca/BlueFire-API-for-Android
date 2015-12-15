@@ -160,7 +160,7 @@ public class Main extends Activity
 		
 		blueFire = new Adapter(this, adapterHandler);
 		
-		this.setTitle("API Demo v-" + blueFire.Version);
+		this.setTitle("API Demo v-" + blueFire.GetAPIVersion());
 
         // Set to use an insecure connection.
         // Note, there are other Android devices that require this other than just ICS (4.0.x).
