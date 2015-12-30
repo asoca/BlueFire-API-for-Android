@@ -158,6 +158,8 @@ public class Main extends Activity
 		
 		setContentView(R.layout.main);
 		
+		LogNotifications("API Demo started.");
+		
 		blueFire = new Adapter(this, adapterHandler);
 		
 		this.setTitle("API Demo v-" + blueFire.GetAPIVersion());
@@ -340,6 +342,8 @@ public class Main extends Activity
 	
 	private void AdapterConnected()
 	{
+		LogNotifications("Adapter connected.");
+		
 	   	isConnected = true;
 	   	isConnecting = false;
 
@@ -359,6 +363,8 @@ public class Main extends Activity
 	
 	private void AdapterNotConnected()
 	{
+		LogNotifications("Adapter not connected.");
+		
 	   	isConnected = false;
 	   	isConnecting = false;
 
@@ -377,6 +383,8 @@ public class Main extends Activity
 
     private void AdapterReconnecting()
     {
+		LogNotifications("Adapter re-connecting.");
+		
     	isConnected = false;
 		isConnecting = true;
     	
@@ -392,6 +400,8 @@ public class Main extends Activity
  
     private void AdapterReconnected()
     {
+		LogNotifications("Adapter re-connected.");
+		
         // Note, AdapterConnected will be called when State changes to Connected.
  
         Toast.makeText(this, "Adapter reconnected.", Toast.LENGTH_LONG).show();
@@ -399,6 +409,8 @@ public class Main extends Activity
 
     private void AdapterNotReconnected()
     {
+		LogNotifications("Adapter not re-connected.");
+		
         AdapterNotConnected();
         
         Toast.makeText(this, "Adapter did not reconnect.", Toast.LENGTH_LONG).show();
@@ -701,7 +713,7 @@ public class Main extends Activity
     private void LogNotifications(String Notification)
     {
  		Log.d("BlueFire", Notification);
-     }
+    }
 	
 	private void ShowData()
 	{       
@@ -921,6 +933,8 @@ public class Main extends Activity
 
     private void ShowSystemError()
     {
+		LogNotifications("System Error.");
+		
 		ShowMessage("System Error", "See System Log");
     }
     

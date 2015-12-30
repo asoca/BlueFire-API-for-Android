@@ -51,6 +51,12 @@ Version 7:<ul>
 Version 8:<ul>
 	<li>Fixed retrieving J1939 Component Id (Make, Model, Serial No, Unit No).
 	<li>Added retrieving J1587 VIN, Component Id and Faults.
+	<li>Added additional exception handling.
+</ul>
+	
+Version 9:<ul>
+	<li>Added additional exception handling.
+	<li>Added additional debug logging to the Demo app (Main).
 </ul>
 	
 Limitations:<ul>
