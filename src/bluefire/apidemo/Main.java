@@ -713,7 +713,7 @@ public class Main extends Activity
        
         if (blueFire.IsFaultDataChanged)
         {
-	        if (Truck.FaultCount == 0)
+	        if (Truck.GetFaultCount() == 0)
 	        {
 	        	textFaultCode.setText("");
 	          	buttonReset.setEnabled(false);
@@ -906,7 +906,7 @@ public class Main extends Activity
     	
     	// Set to show next fault
     	faultIndex += 1;
-    	if (faultIndex == Truck.FaultCount) // wrap to the beginning
+    	if (faultIndex == Truck.GetFaultCount()) // wrap to the beginning
     		faultIndex = 0;
 	}
 	

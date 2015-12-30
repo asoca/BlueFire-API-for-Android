@@ -48,4 +48,15 @@ Version 7:<ul>
 	<li>Compatible with Adapter Firmware 3.x.
 </ul>
 	
+Version 8:<ul>
+	<li>Fixed retrieving J1939 Component Id (Make, Model, Serial No, Unit No).
+	<li>Added retrieving J1587 VIN, Component Id and Faults.
+</ul>
+	
+Limitations:<ul>
+	<li>VIN and Component Id will be retrieved only from the Engine ECU.
+	<li>Only Engine Active faults are retrieved.
+	<li>Only J1939 or J1587 faults can be retrieved (not J1939 and J1587 faults).
+</ul>
+	
 	
