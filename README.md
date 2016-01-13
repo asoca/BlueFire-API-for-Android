@@ -59,6 +59,12 @@ Version 9:<ul>
 	<li>Added additional debug logging to the Demo app (Main).
 </ul>
 	
+Version 10:<ul>
+	<li>Added J1587 filtering.
+	<li>Truck numerical data is initialized to -1.
+	<li>Demo app (Main) shows NA if truck data is negative (no data).
+</ul>
+	
 Limitations:<ul>
 	<li>VIN and Component Id will be retrieved only from the Engine ECU.
 	<li>Only Engine Active faults are retrieved.

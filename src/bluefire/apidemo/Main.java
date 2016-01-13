@@ -849,52 +849,52 @@ public class Main extends Activity
         switch (groupNo)
         {
         case 0:
-            dataView1.setText(String.valueOf(Truck.RPM));
-            dataView2.setText(roundString(Truck.Speed * Const.KphToMph,0));
-            dataView3.setText(roundString(Truck.MaxSpeed * Const.KphToMph,0));
-            dataView4.setText(roundString(Truck.HiResMaxSpeed * Const.KphToMph,0));
-            dataView5.setText(roundString(Truck.AccelPedal,2));
-            dataView6.setText(roundString(Truck.ThrottlePos,2));
+            dataView1.setText(formatInt(Truck.RPM));
+            dataView2.setText(formatFloat(Truck.Speed * Const.KphToMph,0));
+            dataView3.setText(formatFloat(Truck.MaxSpeed * Const.KphToMph,0));
+            dataView4.setText(formatFloat(Truck.HiResMaxSpeed * Const.KphToMph,0));
+            dataView5.setText(formatFloat(Truck.AccelPedal,2));
+            dataView6.setText(formatFloat(Truck.ThrottlePos,2));
             dataView7.setText(Truck.VIN);       
         	break;
         	
         case 1:
-            dataView1.setText(roundString(Truck.Distance * Const.KmToMiles,0));
-            dataView2.setText(roundString(Truck.Odometer * Const.MetersToMiles,0)); // HiRes Distance
-            dataView3.setText(roundString(Truck.TotalHours,2));
-            dataView4.setText(roundString(Truck.IdleHours,2));
-            dataView5.setText(roundString(Truck.BrakeAppPressure * Const.kPaToPSI,2));
-            dataView6.setText(roundString(Truck.Brake1AirPressure * Const.kPaToPSI,2));
+            dataView1.setText(formatFloat(Truck.Distance * Const.KmToMiles,0));
+            dataView2.setText(formatFloat(Truck.Odometer * Const.MetersToMiles,0)); // HiRes Distance
+            dataView3.setText(formatFloat(Truck.TotalHours,2));
+            dataView4.setText(formatFloat(Truck.IdleHours,2));
+            dataView5.setText(formatFloat(Truck.BrakeAppPressure * Const.kPaToPSI,2));
+            dataView6.setText(formatFloat(Truck.Brake1AirPressure * Const.kPaToPSI,2));
             dataView7.setText(Truck.Make);       
          	break;
         	
         case 2:
-            dataView1.setText(roundString(Truck.FuelRate * Const.LphToGalPHr,2));
-            dataView2.setText(roundString(Truck.FuelUsed * Const.LitersToGal,2));
-            dataView3.setText(roundString(Truck.HiResFuelUsed * Const.LitersToGal,2));
-            dataView4.setText(roundString(Truck.IdleFuelUsed * Const.LitersToGal,2));
-            dataView5.setText(roundString(Truck.AvgFuelEcon * Const.KplToMpg,2));
-            dataView6.setText(roundString(Truck.InstFuelEcon * Const.KplToMpg,2));
+            dataView1.setText(formatFloat(Truck.FuelRate * Const.LphToGalPHr,2));
+            dataView2.setText(formatFloat(Truck.FuelUsed * Const.LitersToGal,2));
+            dataView3.setText(formatFloat(Truck.HiResFuelUsed * Const.LitersToGal,2));
+            dataView4.setText(formatFloat(Truck.IdleFuelUsed * Const.LitersToGal,2));
+            dataView5.setText(formatFloat(Truck.AvgFuelEcon * Const.KplToMpg,2));
+            dataView6.setText(formatFloat(Truck.InstFuelEcon * Const.KplToMpg,2));
             dataView7.setText(Truck.Model);       
          	break;
         	
         case 3:
-            dataView1.setText(String.valueOf(Truck.PctLoad));
-            dataView2.setText(String.valueOf(Truck.PctTorque));
-            dataView3.setText(String.valueOf(Truck.DrvPctTorque));
+            dataView1.setText(formatInt(Truck.PctLoad));
+            dataView2.setText(formatInt(Truck.PctTorque));
+            dataView3.setText(formatInt(Truck.DrvPctTorque));
             dataView4.setText(String.valueOf(Truck.TorqueMode));
-            dataView5.setText(roundString(Helper.CelciusToFarenheit(Truck.IntakeTemp),2));
-            dataView6.setText(roundString(Truck.IntakePressure * Const.kPaToPSI,2));
+            dataView5.setText(formatFloat(Helper.CelciusToFarenheit(Truck.IntakeTemp),2));
+            dataView6.setText(formatFloat(Truck.IntakePressure * Const.kPaToPSI,2));
             dataView7.setText(Truck.SerialNo);       
          	break;
         	
         case 4:
-            dataView1.setText(roundString(Helper.CelciusToFarenheit(Truck.OilTemp),2));
-            dataView2.setText(roundString(Truck.OilPressure * Const.kPaToPSI,2));
-            dataView3.setText(roundString(Helper.CelciusToFarenheit(Truck.CoolantTemp),2));
-            dataView4.setText(roundString(Truck.CoolantLevel,2));
-            dataView5.setText(roundString(Truck.CoolantPressure * Const.kPaToPSI,2));
-            dataView6.setText(roundString(Truck.BatteryPotential,2));
+            dataView1.setText(formatFloat(Helper.CelciusToFarenheit(Truck.OilTemp),2));
+            dataView2.setText(formatFloat(Truck.OilPressure * Const.kPaToPSI,2));
+            dataView3.setText(formatFloat(Helper.CelciusToFarenheit(Truck.CoolantTemp),2));
+            dataView4.setText(formatFloat(Truck.CoolantLevel,2));
+            dataView5.setText(formatFloat(Truck.CoolantPressure * Const.kPaToPSI,2));
+            dataView6.setText(formatFloat(Truck.BatteryPotential,2));
             dataView7.setText(Truck.UnitNo);       
          	break;
         	
@@ -903,7 +903,7 @@ public class Main extends Activity
             dataView2.setText(String.valueOf(Truck.ClutchSwitch));
             dataView3.setText(String.valueOf(Truck.ParkBrakeSwitch));
             dataView4.setText(String.valueOf(Truck.CruiseOnOff));
-            dataView5.setText(roundString(Truck.CruiseSetSpeed * Const.KphToMph,0));
+            dataView5.setText(formatFloat(Truck.CruiseSetSpeed * Const.KphToMph,0));
             dataView6.setText(String.valueOf(Truck.CruiseState));
             dataView7.setText(Truck.VIN);       
          	break;
@@ -921,9 +921,19 @@ public class Main extends Activity
     	if (faultIndex == Truck.GetFaultCount()) // wrap to the beginning
     		faultIndex = 0;
 	}
-	
-	private String roundString(float data, int precision)
+
+	private String formatInt(int data)
 	{
+		if (data < 0)
+			return "NA";
+		else
+			return String.valueOf(data);
+	}
+	private String formatFloat(float data, int precision)
+	{
+		if (data < 0)
+			return "NA";
+		
 		String formatString = "#";
 		if(precision > 0)
 			formatString += "." + StringUtils.repeat("#", precision);
