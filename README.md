@@ -1,5 +1,5 @@
 # BlueFire-API-for-Android
-Android API for direct connection to the BlueFire J1939/J1708 Bluetooth Data Adapters. Documentation is available upon request from [BlueFire Support](mailto:support@bluefire.llc.com).
+Android API for direct connection to the BlueFire J1939/J1708 Bluetooth Data Adapters. Documentation is available upon request from [BlueFire Support](mailto:support@bluefire-llc.com).
 
 Version 1:<ul>
 	<li>Initial version.
@@ -69,6 +69,7 @@ Limitations:<ul>
 	<li>VIN and Component Id will be retrieved only from the Engine ECU.
 	<li>Only Engine Active faults are retrieved.
 	<li>Only J1939 or J1587 faults can be retrieved (not J1939 and J1587 faults).
+	<li>Not compatible with new 500K CAN adapter (green Deutsch connector).
 </ul>
 	
 	
