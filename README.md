@@ -62,7 +62,13 @@ Version 9:<ul>
 Version 10:<ul>
 	<li>Added J1587 filtering.
 	<li>Truck numerical data is initialized to -1.
-	<li>Demo app (Main) shows NA if truck data is negative (no data).
+	<li>Demo App (Main) shows NA if truck data is negative (no data).
+</ul>
+	
+Version 11:<ul>
+	<li>Renamed FWVersion property to FirmwareVersion.
+	<li>Renamed HWVersion property to HardwareVersion.
+	<li>J1587 filtering caters for a 0 value where appropriate.
 </ul>
 	
 Limitations:<ul>
