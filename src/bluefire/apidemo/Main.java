@@ -53,7 +53,8 @@ public class Main extends Activity
 	private TextView textStatus;    
 	private TextView textFaultCode;
 	private EditText textLedBrightness;
-	private EditText textAdapterName;
+	private EditText textUserName;
+	private EditText textPassword;
 	private EditText textPGN;
 	private EditText textPGNData;
 	private CheckBox checkJ1939;
@@ -67,15 +68,16 @@ public class Main extends Activity
     private boolean isConnecting;
     private boolean isConnected;
     
-    private int ledBrightness;
-    private String adapterName = "";
+    private int appLedBrightness;
+    private String appUserName = "";
+    private String appPassword = "";
 	
     private int pgn;
     private boolean isSendingPGN;
     private boolean isMonitoringPGN;
 
-    private boolean ignoreJ1939;
-    private boolean ignoreJ1708;
+    private boolean appIgnoreJ1939;
+    private boolean appIgnoreJ1708;
 
 	private int faultIndex;
 	
@@ -95,7 +97,8 @@ public class Main extends Activity
     {
     	private static final String preferenceName = "BlueFire Demo";
     	
-    	public String adapterName = blueFire.DefaultName;
+    	public String userName = "";
+    	public String password = "";
     	
         public int sleepMode;
     	public int ledBrightness = 100;
@@ -113,7 +116,8 @@ public class Main extends Activity
         {
         	SharedPreferences settings = getSharedPreferences(preferenceName, 0);
 
-        	adapterName = settings.getString("adapterName", blueFire.DefaultName);
+        	userName = settings.getString("userName", "");
+        	password = settings.getString("password", "");
        	
         	sleepMode = settings.getInt("sleepMode", 0);
         	ledBrightness = settings.getInt("ledBrightness", 100);
@@ -133,7 +137,8 @@ public class Main extends Activity
         	SharedPreferences preferences = getSharedPreferences(preferenceName, MODE_PRIVATE);
         	SharedPreferences.Editor edit= preferences.edit();
         	
-        	edit.putString("adapterName", adapterName);
+        	edit.putString("userName", userName);
+        	edit.putString("password", password);
 
           	edit.putInt("sleepMode", sleepMode);
         	edit.putInt("ledBrightness", ledBrightness);
@@ -185,8 +190,13 @@ public class Main extends Activity
 	{
         appSettings.getSettings();
 
-        // Set the adapter name
-		blueFire.AdapterName = appSettings.adapterName;
+        // Set the user name and password
+		appUserName = appSettings.userName;
+		appPassword = appSettings.password;
+		blueFire.SetSecurity(appUserName, appPassword);
+        
+        // Set the adapter led brightness
+		blueFire.SetLedBrightness(appSettings.ledBrightness);
         
         // Set the Bluetooth discovery timeout.
         // Note, depending on the number of Bluetooth devices present on the mobile device,
@@ -231,7 +241,8 @@ public class Main extends Activity
         textStatus = (TextView) findViewById(R.id.textStatus);
         textFaultCode = (TextView) findViewById(R.id.textFaultCode);
         textLedBrightness = (EditText) findViewById(R.id.textLedBrightness);
-        textAdapterName = (EditText) findViewById(R.id.textAdapterName);
+        textUserName = (EditText) findViewById(R.id.textUserName);
+        textPassword = (EditText) findViewById(R.id.textPassword);
         textPGN = (EditText) findViewById(R.id.textPGN);
         textPGNData = (EditText) findViewById(R.id.textPGNData);
         
@@ -247,7 +258,7 @@ public class Main extends Activity
        
         buttonConnect.setEnabled(true);
         buttonReset.setEnabled(false);
-        buttonUpdate.setEnabled(false);
+        buttonSendMonitor.setEnabled(false);
         textStatus.setText("Not Connected");
     	
         buttonConnect.setFocusable(true);
@@ -270,19 +281,21 @@ public class Main extends Activity
 		
 		textFaultCode.setText("NA");
 		textLedBrightness.setText("0");
-		textAdapterName.setText("");
+		textUserName.setText("");
+		textPassword.setText("");
 		textHeartbeat.setText("0");
 		checkJ1939.setChecked(false);
 		checkJ1708.setChecked(false);
 		
 		faultIndex = -1;
-		ledBrightness = -1;
+		appLedBrightness = appSettings.ledBrightness;
 		
-		ignoreJ1939 = false;
-		ignoreJ1708 = false;
+		appIgnoreJ1939 = appSettings.ignoreJ1939;
+		appIgnoreJ1708 = appSettings.ignoreJ1708;
     	
     	// Show user settings
-        textAdapterName.setText(appSettings.adapterName);
+        textUserName.setText(appSettings.userName);
+        textPassword.setText(appSettings.password);
         textLedBrightness.setText(String.valueOf(appSettings.ledBrightness));
 		checkJ1939.setChecked(!appSettings.ignoreJ1939); // checkJ1939 is the opposite of ignoreJ1939
 		checkJ1708.setChecked(!appSettings.ignoreJ1708); // checkJ1708 is the opposite of ignoreJ1708
@@ -306,6 +319,7 @@ public class Main extends Activity
             buttonConnect.setEnabled(false);
             buttonReset.setEnabled(false);
             buttonUpdate.setEnabled(false);
+            buttonSendMonitor.setEnabled(false);
             
             connectTimer = new Timer();
             connectTimer.schedule(new ConnectAdapter(), 1, Long.MAX_VALUE);
@@ -333,7 +347,8 @@ public class Main extends Activity
 		{
 	        buttonConnect.setEnabled(false);
 	        buttonReset.setEnabled(false);
-	        buttonUpdate.setEnabled(false);
+            buttonUpdate.setEnabled(true);
+	        buttonSendMonitor.setEnabled(false);
 	        
 	        blueFire.Disconnect(true);
 		}
@@ -351,6 +366,7 @@ public class Main extends Activity
         
         buttonConnect.setEnabled(true);
         buttonUpdate.setEnabled(true);
+        buttonSendMonitor.setEnabled(true);
     	
     	buttonConnect.requestFocus();
     	
@@ -374,7 +390,8 @@ public class Main extends Activity
         checkJ1708.setEnabled(true);
         
         buttonConnect.setEnabled(true);
-        buttonUpdate.setEnabled(false);
+        buttonUpdate.setEnabled(true);
+        buttonSendMonitor.setEnabled(false);
     	
     	buttonConnect.requestFocus();
        
@@ -390,6 +407,7 @@ public class Main extends Activity
     	
         buttonConnect.setEnabled(false);
         buttonUpdate.setEnabled(false);
+        buttonSendMonitor.setEnabled(false);
 
         LogNotifications("App reconnecting to the Adapter. Reason is " + blueFire.ReconnectReason + ".");
         
@@ -441,45 +459,64 @@ public class Main extends Activity
 	// Update button
 	public void onUpdateClick(View view) 
 	{
-		// Update LED Brightness
-		int ledBrightness = -1;
+		// Edit LED Brightness
+		int ledBrightnessText = -1;
 		try
 		{
-			ledBrightness = Integer.parseInt(textLedBrightness.getText().toString().trim());
+			ledBrightnessText = Integer.parseInt(textLedBrightness.getText().toString().trim());
 		}
 		catch(Exception e){}
 		
-		if (ledBrightness < 1 || ledBrightness > 100)
+		if (ledBrightnessText < 1 || ledBrightnessText > 100)
 		{
             Toast.makeText(this, "Led Brightness must be between 1 and 100", Toast.LENGTH_LONG).show();
             return;
 		}
-		if (ledBrightness != blueFire.LedBrightness)
+		
+		// Edit User Name
+		String userNameText = textUserName.getText().toString().trim();
+		if (userNameText.length() > 20)
 		{
-			blueFire.SetLedBrightness(ledBrightness);
+            Toast.makeText(this, "User Name must be less than 21 characters.", Toast.LENGTH_LONG).show();
+            return;
+		}
+		
+		// Edit Password
+		String passwordText = textPassword.getText().toString().trim();
+		if (passwordText.length() > 12)
+		{
+            Toast.makeText(this, "Password must be less than 13 characters.", Toast.LENGTH_LONG).show();
+            return;
+		}
+		
+		// Check for a change of led brightness
+		if (ledBrightnessText != appLedBrightness)
+		{
+			appLedBrightness = ledBrightnessText;
+			
+			blueFire.SetLedBrightness(appLedBrightness);
+			
 	        Toast.makeText(this, "LED Brightness updated.", Toast.LENGTH_SHORT).show();
 		}
 		
-		// Update Adapter Name
-		String adapterName = textAdapterName.getText().toString().trim();
-		if (adapterName.length() > 20)
+		// Check for a change of user name or password
+		if (!appUserName.equals(userNameText) || !appPassword.equals(passwordText))
 		{
-            Toast.makeText(this, "Adapter Name must be less than 20 characters.", Toast.LENGTH_LONG).show();
-            return;
-		}
-		if (adapterName.equals(""))
-			adapterName = blueFire.DefaultName;
-		
-		if (!adapterName.equals(blueFire.AdapterName))
-		{
-			blueFire.SetAdapterName(adapterName);	
-			Toast.makeText(this, "Adapter Name updated.", Toast.LENGTH_SHORT).show();
+			appUserName = userNameText;
+			appPassword = passwordText;
+			
+			blueFire.UpdateSecurity(appUserName, appPassword);
+			
+			Toast.makeText(this, "User Name and Password have been updated.", Toast.LENGTH_SHORT).show();
 		}
 		
 		// Save settings
-		appSettings.ledBrightness = ledBrightness;
-		appSettings.adapterName = adapterName;
+		appSettings.ledBrightness = appLedBrightness;
+		appSettings.userName = appUserName;
+		appSettings.password = appPassword;
 		appSettings.saveSettings();
+		
+		buttonConnect.requestFocus();
 	}
 	
 	// Send/Monitor button
@@ -541,27 +578,27 @@ public class Main extends Activity
 	public void onJ1939Click(View view)
 	{
 		// Set to ignore J1939 (opposite of checkJ1939)
-		ignoreJ1939 = !checkJ1939.isChecked();
+		appIgnoreJ1939 = !checkJ1939.isChecked();
 		
 		// Save settings
-		appSettings.ignoreJ1939 = ignoreJ1939;
+		appSettings.ignoreJ1939 = appIgnoreJ1939;
 		appSettings.saveSettings();
 		
 		// Update BlueFire
-		blueFire.SetIgnoreJ1939(ignoreJ1939);
+		blueFire.SetIgnoreJ1939(appIgnoreJ1939);
 	}
 
 	public void onJ1708Click(View view)
 	{
 		// Set to ignore J708 (opposite of checkJ1708)
-		ignoreJ1708 = !checkJ1708.isChecked();
+		appIgnoreJ1708 = !checkJ1708.isChecked();
 		
 		// Save settings
-		appSettings.ignoreJ1708 = ignoreJ1708;
+		appSettings.ignoreJ1708 = appIgnoreJ1708;
 		appSettings.saveSettings();
 		
 		// Update BlueFire
-		blueFire.SetIgnoreJ1708(ignoreJ1708);
+		blueFire.SetIgnoreJ1708(appIgnoreJ1708);
 	}
 	
     // Data Changed Handler from the BlueFire Adapter
@@ -645,7 +682,8 @@ public class Main extends Activity
 						break;
 						
 					case DataChanged:
-						ShowData();
+						if (isConnected)
+							ShowData();
 				}
 				
 				// Check reset button enable
@@ -667,10 +705,15 @@ public class Main extends Activity
             DisconnectAdapter();
             return;
     	}
-    	
-       	blueFire.GetAdapterName(); // BlueFire or User Name
-       	blueFire.GetPassword(); // User Password
-    	
+
+    	// Check authentication
+        if (!blueFire.IsAuthenticated)
+        {
+            Toast.makeText(this, "Your User Name and Password do not match the Adapter's User Name and Password.", Toast.LENGTH_LONG).show();
+            DisconnectAdapter();
+            return;
+        }
+        
        	blueFire.GetSleepMode(); // Adapter Sleep Mode
       	blueFire.GetLedBrightness(); // Adapter LED Brightness
        	blueFire.GetMessages(); // Any Adapter Error Messages
@@ -716,7 +759,7 @@ public class Main extends Activity
     }
 	
 	private void ShowData()
-	{       
+	{ 
         // Show truck data
         if (blueFire.IsTruckDataChanged)
         {
@@ -740,43 +783,33 @@ public class Main extends Activity
 	        	}
 	        }
         }
+		
+		// Check for user changed adapter data while offline
+		if (appLedBrightness != blueFire.LedBrightness)
+			blueFire.SetLedBrightness(appLedBrightness);
         
-        // Only change an input field if data has changed
-         if (ledBrightness != blueFire.LedBrightness)
-         {
-        	ledBrightness = Integer.parseInt(textLedBrightness.getText().toString());
-        	textLedBrightness.setText(String.valueOf(blueFire.LedBrightness));
-         }
-         
-         // Only change an input field if data has changed
-          if (!adapterName.equals(blueFire.AdapterName))
-          {
-        	adapterName = textAdapterName.getText().toString().trim();
-        	textAdapterName.setText(String.valueOf(blueFire.AdapterName));
-          }
-         
-         // Only change an input field if data has changed
-          if (!ignoreJ1939 != blueFire.GetIgnoreJ1939())
-          {
-        	  ignoreJ1939 = blueFire.GetIgnoreJ1939();
-        	  checkJ1939.setChecked(!ignoreJ1939); // checkJ1939 is the opposite of ignoreJ1939
-          }
-          if (!ignoreJ1708 != blueFire.GetIgnoreJ1708())
-          {
-        	  ignoreJ1708 = blueFire.GetIgnoreJ1708();
-        	  checkJ1708.setChecked(!ignoreJ1708); // checkJ1708 is the opposite of ignoreJ1708
-          }
-          
-          // Check for SendPGN response
-          if ((isSendingPGN || isMonitoringPGN) && blueFire.PGNData.PGN== pgn)
-          {
-        	  isSendingPGN = false; // only show sending data once
-        	  textPGNData.setText(new String(Hex.encodeHex(blueFire.PGNData.Data)).toUpperCase());       	  
-           }
-         
-         // Show heartbeat
-         textHeartbeat.setText(String.valueOf(blueFire.HeartbeatCount));
-   }
+		// Check if adapter overrode user input
+		if (!appIgnoreJ1939 != blueFire.GetIgnoreJ1939()) 
+		{
+			appIgnoreJ1939 = blueFire.GetIgnoreJ1939();
+			checkJ1939.setChecked(!appIgnoreJ1939); // checkJ1939 is the opposite of ignoreJ1939
+		}
+		if (!appIgnoreJ1708 != blueFire.GetIgnoreJ1708()) 
+		{
+			appIgnoreJ1708 = blueFire.GetIgnoreJ1708();
+			checkJ1708.setChecked(!appIgnoreJ1708); // checkJ1708 is the opposite of ignoreJ1708
+		}
+
+		// Check for SendPGN response
+		if ((isSendingPGN || isMonitoringPGN) && blueFire.PGNData.PGN == pgn) 
+		{
+			isSendingPGN = false; // only show sending data once
+			textPGNData.setText(new String(Hex.encodeHex(blueFire.PGNData.Data)).toUpperCase());
+		}
+ 
+		// Show heartbeat
+		textHeartbeat.setText(String.valueOf(blueFire.HeartbeatCount));
+	}
 	
 	private void ShowTruckText()
 	{

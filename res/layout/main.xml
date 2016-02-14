@@ -14,7 +14,7 @@
 	        android:layout_alignParentLeft="true"
 	        android:layout_alignParentTop="true"
 	        android:layout_marginLeft="5dp"
-	        android:layout_marginTop="26dp"
+	        android:layout_marginTop="10dp"
 	        android:text=""
 	        android:textAppearance="?android:attr/textAppearanceMedium" />
 	
@@ -35,9 +35,9 @@
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
 	        android:layout_alignBaseline="@+id/textView1"
-	        android:layout_alignBottom="@+id/textView1"
+	        android:layout_alignBottom="@+id/textView2"
 	        android:layout_alignParentRight="true"
-	        android:layout_marginRight="20dp"
+	        android:layout_marginRight="10dp"
 	        android:onClick="onNextGroupClick"
 	        android:text="Next Group"
 	        android:textAppearance="?android:attr/textAppearanceMedium" />
@@ -49,7 +49,7 @@
 	        android:layout_height="wrap_content"
 	        android:layout_alignLeft="@+id/textView1"
 	        android:layout_below="@+id/textView1"
-	        android:layout_marginTop="5dp"
+	        android:layout_marginTop="3dp"
 	        android:text=""
 	        android:textAppearance="?android:attr/textAppearanceMedium" />
 	
@@ -70,7 +70,7 @@
 	        android:layout_height="wrap_content"
 	        android:layout_alignLeft="@+id/textView1"
 	        android:layout_below="@+id/textView2"
-	        android:layout_marginTop="5dp"
+	        android:layout_marginTop="3dp"
 	        android:text=""
 	        android:textAppearance="?android:attr/textAppearanceMedium" />
 	
@@ -91,7 +91,7 @@
 	        android:layout_height="wrap_content"
 	        android:layout_alignLeft="@+id/textView1"
 	        android:layout_below="@+id/textView3"
-	        android:layout_marginTop="5dp"
+	        android:layout_marginTop="3dp"
 	        android:text=""
 	        android:textAppearance="?android:attr/textAppearanceMedium" />
 	
@@ -112,7 +112,7 @@
 	        android:layout_height="wrap_content"
 	        android:layout_alignLeft="@+id/textView1"
 	        android:layout_below="@+id/textView4"
-	        android:layout_marginTop="5dp"
+	        android:layout_marginTop="3dp"
 	        android:text=""
 	        android:textAppearance="?android:attr/textAppearanceMedium" />
 	
@@ -133,7 +133,7 @@
 	        android:layout_height="wrap_content"
 	        android:layout_alignLeft="@+id/textView1"
 	        android:layout_below="@+id/textView5"
-	        android:layout_marginTop="5dp"
+	        android:layout_marginTop="3dp"
 	        android:text=""
 	        android:textAppearance="?android:attr/textAppearanceMedium" />
 	
@@ -154,7 +154,7 @@
 	        android:layout_height="wrap_content"
 	        android:layout_alignLeft="@+id/textView1"
 	        android:layout_below="@+id/textView6"
-	        android:layout_marginTop="5dp"
+	        android:layout_marginTop="3dp"
 	        android:text="VIN:"
 	        android:textAppearance="?android:attr/textAppearanceMedium" />
 	
@@ -175,7 +175,7 @@
 	        android:layout_height="wrap_content"
 	        android:layout_alignLeft="@+id/textView1"
 	        android:layout_below="@+id/textView7"
-	        android:layout_marginTop="5dp"
+	        android:layout_marginTop="3dp"
 	        android:text="Status:"
 	        android:textAppearance="?android:attr/textAppearanceMedium" />
 	
@@ -196,7 +196,7 @@
 	        android:layout_height="wrap_content"
 	        android:layout_alignLeft="@+id/textView1"
 	        android:layout_below="@+id/textView9"
-	       	android:layout_marginTop="5dp"
+	       	android:layout_marginTop="3dp"
 	        android:text="Fault:"
 	        android:textAppearance="?android:attr/textAppearanceMedium" />
 	
@@ -232,7 +232,7 @@
 	        android:layout_height="wrap_content"
 	        android:layout_alignLeft="@+id/textView1"
 	        android:layout_below="@+id/textView10"
-	        android:layout_marginTop="5dp"
+	        android:layout_marginTop="3dp"
 	        android:text="Adapter"
 	        android:textAppearance="?android:attr/textAppearanceMedium" />
 	
@@ -244,7 +244,7 @@
 	        android:layout_alignLeft="@+id/textView1"
 	        android:layout_below="@+id/textView11"
 	        android:layout_marginLeft="20dp"
-	        android:layout_marginTop="5dp"
+	        android:layout_marginTop="3dp"
 	        android:text="Led Brightness:"
 	        android:textAppearance="?android:attr/textAppearanceMedium" />
 	
@@ -259,7 +259,7 @@
 	        android:maxLength="3"
 	        android:textAppearance="?android:attr/textAppearanceMedium" />
 	
-		<!--  Adapter Name    -->
+		<!--  User Name    -->
 	    <TextView
 	        android:id="@+id/textView12a"
 	        android:layout_width="wrap_content"
@@ -267,28 +267,51 @@
 	        android:layout_alignLeft="@+id/textView1"
 	        android:layout_below="@+id/textView12"
 	        android:layout_marginLeft="20dp"
-	        android:layout_marginTop="5dp"
-	        android:text="Name:"
+	        android:layout_marginTop="3dp"
+	        android:text="User Name:"
 	        android:textAppearance="?android:attr/textAppearanceMedium" />
 	
 	    <EditText
-	        android:id="@+id/textAdapterName"
+	        android:id="@+id/textUserName"
 	        android:layout_width="180dp"
 	        android:layout_height="wrap_content"
 	        android:layout_alignBaseline="@+id/textView12a"
 	        android:layout_alignBottom="@+id/textView12a"
-	        android:layout_marginLeft="80dp"
+	        android:layout_marginLeft="120dp"
 	        android:inputType="textNoSuggestions"
 	        android:maxLength="20"
 	        android:textAppearance="?android:attr/textAppearanceMedium" />
-	    	
+	
+		<!--  Password    -->
+	    <TextView
+	        android:id="@+id/textView12a1"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_alignLeft="@+id/textView1"
+	        android:layout_below="@+id/textView12a"
+	        android:layout_marginLeft="20dp"
+	        android:layout_marginTop="3dp"
+	        android:text="Password:"
+	        android:textAppearance="?android:attr/textAppearanceMedium" />
+	
+	    <EditText
+	        android:id="@+id/textPassword"
+	        android:layout_width="180dp"
+	        android:layout_height="wrap_content"
+	        android:layout_alignBaseline="@+id/textView12a1"
+	        android:layout_alignBottom="@+id/textView12a1"
+	        android:layout_marginLeft="120dp"
+	        android:inputType="textNoSuggestions"
+	        android:maxLength="12"
+	        android:textAppearance="?android:attr/textAppearanceMedium" />
+	    	    	
 		<!--  Update Button    -->
 	    <Button
 	        android:id="@+id/buttonUpdate"
 	        style="@style/AppBaseTheme"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
-	        android:layout_alignBottom="@+id/textAdapterName"
+	        android:layout_alignBottom="@+id/textUserName"
 	        android:layout_alignParentRight="true"
 	        android:layout_marginRight="10dp"
 	        android:onClick="onUpdateClick"
@@ -301,7 +324,7 @@
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
 	        android:layout_alignLeft="@+id/textView1"
-	        android:layout_below="@+id/buttonUpdate"
+	        android:layout_below="@+id/textPassword"
 	       	android:layout_marginTop="10dp"
 	        android:text="Send PGN:"
 	        android:textAppearance="?android:attr/textAppearanceMedium" />

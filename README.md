@@ -71,6 +71,12 @@ Version 11:<ul>
 	<li>J1587 filtering caters for a 0 value where appropriate.
 </ul>
 	
+Version 12:<ul>
+	<li>Supports Adapter Firmware 3.4.
+	<li>Added User Name and Password authentication.
+	<li>Added updating adapter data (led brightness) while offline to the Demo app (Main).
+</ul>
+	
 Limitations:<ul>
 	<li>VIN and Component Id will be retrieved only from the Engine ECU.
 	<li>Only Engine Active faults are retrieved.
