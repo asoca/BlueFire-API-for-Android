@@ -72,9 +72,14 @@ Version 11:<ul>
 </ul>
 	
 Version 12:<ul>
-	<li>Supports Adapter Firmware 3.4.
+	<li>Supports Adapter Firmwares 3.4+.
 	<li>Added User Name and Password authentication.
 	<li>Added updating adapter data (led brightness) while offline to the Demo app (Main).
+</ul>
+	
+Version 13:<ul>
+	<li>Added Key State to API Demo (Key On/Off).
+	<li>Renamed source folder and apk from "bluefire.apidemo" to "com.bluefire.apidemo".
 </ul>
 	
 Limitations:<ul>

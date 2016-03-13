@@ -423,6 +423,18 @@
 	        android:text="Connect"
 	        android:textAppearance="?android:attr/textAppearanceMedium" />
 	
+		<!--  Key State    -->
+	    <TextView
+	        android:id="@+id/textKeyState"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_alignBaseline="@+id/buttonConnect"
+	        android:layout_alignBottom="@+id/buttonConnect"
+	        android:layout_alignParentLeft="true"
+	        android:layout_marginLeft="140dp"
+	        android:text="Key Off"
+	        android:textAppearance="?android:attr/textAppearanceMedium" />
+	    	
 		<!--  Heartbeat    -->
 	    <TextView
 	        android:id="@+id/textView13"

@@ -1,4 +1,4 @@
-package bluefire.apidemo;
+package com.bluefire.apidemo;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -51,6 +51,7 @@ public class Main extends Activity
 	private TextView dataView7;
 	
 	private TextView textStatus;    
+	private TextView textKeyState;    
 	private TextView textFaultCode;
 	private EditText textLedBrightness;
 	private EditText textUserName;
@@ -85,6 +86,8 @@ public class Main extends Activity
 	private static final int maxGroupNo = 5;
     
     private Timer connectTimer;
+    
+    private boolean isCANAvailable;
     
     private ConnectionStates ConnectionState = ConnectionStates.NotConnected;
 
@@ -239,6 +242,7 @@ public class Main extends Activity
         dataView7 = (TextView) findViewById(R.id.dataView7);
         
         textStatus = (TextView) findViewById(R.id.textStatus);
+        textKeyState = (TextView) findViewById(R.id.textKeyState);
         textFaultCode = (TextView) findViewById(R.id.textFaultCode);
         textLedBrightness = (EditText) findViewById(R.id.textLedBrightness);
         textUserName = (EditText) findViewById(R.id.textUserName);
@@ -742,7 +746,7 @@ public class Main extends Activity
 		if (ConnectionState != blueFire.ConnectionState)
 		{
 			ConnectionState = blueFire.ConnectionState;
-        	textStatus.setText(ConnectionState.toString());
+			textStatus.setText(ConnectionState.toString());
 		}
 		
         // Show any error message from the adapter
@@ -757,9 +761,25 @@ public class Main extends Activity
     {
  		Log.d("BlueFire", Notification);
     }
-	
+
+    private void CheckKeyState()
+    {
+		if (isCANAvailable != blueFire.IsCANAvailable)
+		{
+			isCANAvailable = blueFire.IsCANAvailable;
+			if (isCANAvailable)
+				textKeyState.setText("Key On");
+			else
+				textKeyState.setText("Key Off");
+		}
+
+    }
+    
 	private void ShowData()
 	{ 
+		// Check the key state
+		CheckKeyState();
+		
         // Show truck data
         if (blueFire.IsTruckDataChanged)
         {
