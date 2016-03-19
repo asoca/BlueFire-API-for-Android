@@ -84,7 +84,7 @@ Version 13:<ul>
 	
 Version 14:<ul>
 	<li>Minor improvements to the Bluetooth Discovery process.
-	<li>Changed SetMaxConnectRetrys default to 10 retries.
+	<li>Changed SetMaxConnectRetrys default to 10 retries. 
 	<li>Changed SetDiscoveryTimeOut default to 30 seconds.
 </ul>
 	
