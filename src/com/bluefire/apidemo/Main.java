@@ -112,8 +112,8 @@ public class Main extends Activity
         public String lastConnectedId = "";
         public boolean connectToLastAdapter = false;
         
-        public int discoveryTimeOut = 5 * Const.OneSecond;
-        public int maxConnectRetrys;
+        public int discoveryTimeOut = 30 * Const.OneSecond;
+        public int maxConnectRetrys = 10;
        
         public void getSettings()
         {
@@ -131,8 +131,8 @@ public class Main extends Activity
         	lastConnectedId = settings.getString("lastConnectedId", "");
         	connectToLastAdapter = settings.getBoolean("connectToLastAdapter", false);
 
-        	discoveryTimeOut = settings.getInt("discoveryTimeOut", 5 * Const.OneSecond);
-        	maxConnectRetrys = settings.getInt("maxConnectRetrys", 0);
+        	discoveryTimeOut = settings.getInt("discoveryTimeOut", 30 * Const.OneSecond);
+        	maxConnectRetrys = settings.getInt("maxConnectRetrys", 10);
         }
         
         public void saveSettings()

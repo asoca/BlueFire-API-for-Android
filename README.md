@@ -82,6 +82,12 @@ Version 13:<ul>
 	<li>Renamed source folder and apk from "bluefire.apidemo" to "com.bluefire.apidemo".
 </ul>
 	
+Version 14:<ul>
+	<li>Minor improvements to the Bluetooth Discovery process.
+	<li>Changed SetMaxConnectRetrys default to 10 seconds.
+	<li>Changed SetDiscoveryTimeOut default to 30 seconds.
+</ul>
+	
 Limitations:<ul>
 	<li>VIN and Component Id will be retrieved only from the Engine ECU.
 	<li>Only Engine Active faults are retrieved.
