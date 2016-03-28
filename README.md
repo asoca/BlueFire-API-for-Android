@@ -84,8 +84,13 @@ Version 13:<ul>
 	
 Version 14:<ul>
 	<li>Minor improvements to the Bluetooth Discovery process.
-	<li>Changed SetMaxConnectRetrys default to 10 seconds.
+	<li>Changed SetMaxConnectRetrys default to 10 retries.
 	<li>Changed SetDiscoveryTimeOut default to 30 seconds.
+</ul>
+	
+Version 15:<ul>
+	<li>Supports Adapter Firmware 3.7.
+	<li>GetVehicleData, GetFuelData, and GetEngineHours retrieves data more accurately (firmware 3.6 and lower work, but better performance with firmware 3.7). 
 </ul>
 	
 Limitations:<ul>
