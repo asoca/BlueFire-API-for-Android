@@ -50,7 +50,7 @@ Version 7:<ul>
 	
 Version 8:<ul>
 	<li>Fixed retrieving J1939 Component Id (Make, Model, Serial No, Unit No).
-	<li>Added retrieving J1587 VIN, Component Id and Faults.
+	<li>Added retrieving J1708 VIN, Component Id and Faults.
 	<li>Added additional exception handling.
 </ul>
 	
@@ -60,7 +60,7 @@ Version 9:<ul>
 </ul>
 	
 Version 10:<ul>
-	<li>Added J1587 filtering.
+	<li>Added J1708 filtering.
 	<li>Truck numerical data is initialized to -1.
 	<li>Demo App (Main) shows NA if truck data is negative (no data).
 </ul>
@@ -93,10 +93,14 @@ Version 15:<ul>
 	<li>GetVehicleData, GetFuelData, and GetEngineHours retrieves data more accurately (firmware 3.6 and lower work, but better performance with firmware 3.7). 
 </ul>
 	
+Version 16:<ul>
+	<li>When J1939 and J1708 data are retrieved, J1939 data will take precedence over J1708 data. 
+</ul>
+	
 Limitations:<ul>
 	<li>VIN and Component Id will be retrieved only from the Engine ECU.
 	<li>Only Engine Active faults are retrieved.
-	<li>Only J1939 or J1587 faults can be retrieved (not J1939 and J1587 faults).
+	<li>Only J1939 or J1708 faults can be retrieved (not J1939 and J1708 faults).
 	<li>Not compatible with new 500K CAN adapter (green Deutsch connector).
 </ul>
 	
