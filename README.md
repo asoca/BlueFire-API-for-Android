@@ -97,6 +97,12 @@ Version 16:<ul>
 	<li>When J1939 and J1708 data are retrieved, J1939 data will take precedence over J1708 data. 
 </ul>
 	
+Version 17:<ul>
+	<li>Supports Adapter Firmware 3.8.
+	<li>Added Get/Set PerformanceMode that will improve the retrieval of PGNs that have an interval of one second. 
+	<li>Minor improvement to the retrieval of vehicle data (vin, make, model, serial no). 
+</ul>
+	
 Limitations:<ul>
 	<li>VIN and Component Id will be retrieved only from the Engine ECU.
 	<li>Only Engine Active faults are retrieved.

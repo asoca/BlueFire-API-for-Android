@@ -70,6 +70,7 @@ public class Main extends Activity
     private boolean isConnected;
     
     private int appLedBrightness;
+    private boolean appPerformanceMode;
     private String appUserName = "";
     private String appPassword = "";
 	
@@ -104,7 +105,8 @@ public class Main extends Activity
     	public String password = "";
     	
         public int sleepMode;
-    	public int ledBrightness = 100;
+    	public int ledBrightness = 100;   	
+    	public boolean performanceMode = false;
     	
         public boolean ignoreJ1939 = false;
         public boolean ignoreJ1708 = false;
@@ -124,6 +126,7 @@ public class Main extends Activity
        	
         	sleepMode = settings.getInt("sleepMode", 0);
         	ledBrightness = settings.getInt("ledBrightness", 100);
+        	performanceMode = settings.getBoolean("performanceMode", false);
 
         	ignoreJ1939 = settings.getBoolean("ignoreJ1939", false);
         	ignoreJ1708 = settings.getBoolean("ignoreJ1708", true); // set to true to improve performance
@@ -145,6 +148,7 @@ public class Main extends Activity
 
           	edit.putInt("sleepMode", sleepMode);
         	edit.putInt("ledBrightness", ledBrightness);
+        	edit.putBoolean("performanceMode", performanceMode);
         	
         	edit.putBoolean("ignoreJ1939", ignoreJ1939);
         	edit.putBoolean("ignoreJ1708", ignoreJ1708);
@@ -178,9 +182,16 @@ public class Main extends Activity
             blueFire.SetUseInsecureConnection(true);
         else
             blueFire.SetUseInsecureConnection(false);   	
-
+ 
         // Get app settings
         appSettings = new Settings();
+        
+        appSettings.performanceMode = true; // default
+        appSettings.connectToLastAdapter = false; // default
+        appSettings.discoveryTimeOut = 30 * Const.OneSecond; // default
+        appSettings.maxConnectRetrys = 10; // default
+        
+        appSettings.saveSettings();
 
         // Initialize adapter properties
         initializeAdapter();
@@ -192,7 +203,7 @@ public class Main extends Activity
 	private void initializeAdapter()
 	{
         appSettings.getSettings();
-
+        
         // Set the user name and password
 		appUserName = appSettings.userName;
 		appPassword = appSettings.password;
@@ -200,6 +211,9 @@ public class Main extends Activity
         
         // Set the adapter led brightness
 		blueFire.SetLedBrightness(appSettings.ledBrightness);
+        
+        // Set the performance mode
+		blueFire.SetPerformanceMode(appSettings.performanceMode);
         
         // Set the Bluetooth discovery timeout.
         // Note, depending on the number of Bluetooth devices present on the mobile device,
@@ -293,6 +307,7 @@ public class Main extends Activity
 		
 		faultIndex = -1;
 		appLedBrightness = appSettings.ledBrightness;
+		appPerformanceMode = appSettings.performanceMode;
 		
 		appIgnoreJ1939 = appSettings.ignoreJ1939;
 		appIgnoreJ1708 = appSettings.ignoreJ1708;
@@ -807,6 +822,9 @@ public class Main extends Activity
 		// Check for user changed adapter data while offline
 		if (appLedBrightness != blueFire.LedBrightness)
 			blueFire.SetLedBrightness(appLedBrightness);
+        
+		if (appPerformanceMode != blueFire.PerformanceMode)
+			blueFire.SetPerformanceMode(appPerformanceMode);
         
 		// Check if adapter overrode user input
 		if (!appIgnoreJ1939 != blueFire.GetIgnoreJ1939()) 
